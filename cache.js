@@ -41,9 +41,9 @@ MemoryStoreExpire.prototype.get = function (domain, key, cb) {
     var nresults = {};
     var now = Date.now();
 
-    for (i in results) {
-      type = results[i];
-      for (j in type) {
+    Object.keys(results).forEach(function (i) {
+      let type = results[i];
+      Object.keys(type).forEach(function (j) {
         record = type[j];
         record.ttl = Math.round((record._ttl_expires - now) / 1000)
         if (record.ttl > 0) {
@@ -53,31 +53,30 @@ MemoryStoreExpire.prototype.get = function (domain, key, cb) {
           nresults[i].push(record);
         } else {
           self._ttl.remove(record);
-          self._store.delete(self._zone, record.name, record.type, function () {});
+          self._store.delete(self._zone, record.name, record.type, function () { });
         }
-      }
-    }
+      });
+    });
 
     cb(err, nresults);
   });
 };
 
 MemoryStoreExpire.prototype.set = function (domain, key, data, cb) {
-  var i, j, type, record, expires;
   var self = this;
   var now = Date.now();
 
   key = utils.ensure_absolute(key);
 
-  for (i in data) {
-    type = data[i];
-    for (j in type) {
-      record = type[j];
-      expires = (record.ttl * 1000) + now;
+  Object.keys(data).forEach(function (i) {
+    let type = data[i];
+    Object.keys(type).forEach(function (j) {
+      let record = type[j];
+      let expires = (record.ttl * 1000) + now;
       record._ttl_expires = expires;
       self._ttl.insert(record, expires);
-    }
-  }
+    });
+  });
 
   while (this._ttl.length > this._max_keys) {
     var record = this._ttl.pop();
@@ -99,15 +98,13 @@ MemoryStoreExpire.prototype.delete = function (domain, key, type, cb) {
   var self = this;
 
   this._store.get(domain, utils.ensure_absolute(key), function (gerr, gresults) {
-    var i, j, ktype, record;
-
-    for (i in gresults) {
-      ktype = gresults[i];
-      for (j in ktype) {
-        record = ktype[j];
+    Object.keys(gresults).forEach(function (i) {
+      let ktype = gresults[i];
+      Object.keys(ktype).forEach(function (j) {
+        let record = ktype[j];
         self._ttl.remove(record);
-      }
-    }
+      });
+    });
 
     if (!gresults) {
       if (cb)
@@ -153,7 +150,7 @@ Cache.prototype.store = function (packet) {
 
   packet.answer.forEach(each);
   packet.authority.forEach(each);
-  packet.additional.forEach(each);  
+  packet.additional.forEach(each);
 
   Object.keys(c).forEach(function (key) {
     self._store.set(self._zone, utils.ensure_absolute(key), c[key]);
@@ -165,13 +162,13 @@ Cache.prototype.lookup = function (question, cb) {
   Lookup(this._store, this._zone, question, function (err, results) {
     var i, record, found = false;
 
-    for (i in results) {
+    Object.keys(results).forEach(function (i) {
       record = results[i];
       if (record.type == question.type) {
         found = true;
         break;
       }
-    }
+    });
 
     if (results && !found) {
       self._store.delete(self._zone, utils.ensure_absolute(question.name));

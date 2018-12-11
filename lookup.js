@@ -19,9 +19,9 @@
 // THE SOFTWARE
 
 var dgram = require('dgram'),
-    EventEmitter = require('events').EventEmitter,
-    net = require('net'),
-    util = require('util');
+  EventEmitter = require('events').EventEmitter,
+  net = require('net'),
+  util = require('util');
 
 var is_absolute = exports.is_absolute = function (f) {
   return f && /\.$/.test(f);
@@ -87,13 +87,13 @@ Lookup.prototype.lookup = function (err, results) {
   if (ret) {
     ret = ret[type];
     ret.forEach(function (r) {
-      var rr, k;
+      var rr;
 
       if (self.wildcard && /^\*/.test(r.name)) {
         rr = {};
-        for (k in r) {
+        Object.keys(r).forEach(function (k) {
           rr[k] = r[k];
-        }
+        });
         rr.name = self.name;
       } else {
         rr = r;
